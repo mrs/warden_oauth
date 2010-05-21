@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
 
     def self.access_token_user_finder(key, &block)
       Strategy.access_token_user_finders[key] = block

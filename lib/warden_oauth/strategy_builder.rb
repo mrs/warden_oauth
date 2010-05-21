@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
 
     #
     # Handles the creation an registration of OAuth strategies based on configuration parameters
@@ -51,7 +51,7 @@ module Warden
       #   # Warden::OAuth::Strategy
       #
       def create_oauth_strategy_class(keyword)
-        class_name = Warden::OAuth::Utils.camelize(keyword.to_s) 
+        class_name = Warden::OAuth2::Utils.camelize(keyword.to_s) 
         if self.const_defined?(class_name)
           self.const_get(class_name) 
         else

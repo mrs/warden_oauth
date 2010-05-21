@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
 
     #
     # Holds all the main logic of the OAuth authentication, all the generated
@@ -49,7 +49,7 @@ module Warden
           load_request_token_from_session
           if missing_stored_token?
             fail!("There is no OAuth authentication in progress")
-          elsif !stored_token_match_recieved_token?
+          elsif !stored_token_match_received_token?
             fail!("Received OAuth token didn't match stored OAuth token")
           else
             user = find_user_by_access_token(access_token)
@@ -74,11 +74,11 @@ module Warden
       ###################
 
       def consumer
-        @consumer ||= ::OAuth::Consumer.new(config.consumer_key, config.consumer_secret, config.options)
+        @consumer ||= ::OAuth2::Consumer.new(config.consumer_key, config.consumer_secret, config.options)
       end
 
       def request_token
-        host_with_port = Warden::OAuth::Utils.host_with_port(request)
+        host_with_port = Warden::OAuth2::Utils.host_with_port(request)
         @request_token ||= consumer.get_request_token(:oauth_callback => host_with_port)
       end
 
@@ -129,7 +129,7 @@ ERROR_MESSAGE
         !request_token
       end
 
-      def stored_token_match_recieved_token?
+      def stored_token_match_received_token?
         request_token.token == params['oauth_token']
       end
 

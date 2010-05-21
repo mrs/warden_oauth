@@ -24,7 +24,7 @@ describe Warden::Config do
           @config.oauth(:service) do |service|
             service.consumer_secret "ABC"
           end
-        end.should raise_error(Warden::OAuth::ConfigError,  "You need to specify the consumer key and the consumer secret")
+        end.should raise_error(Warden::OAuth2::ConfigError,  "You need to specify the consumer key and the consumer secret")
       end
 
       it "should require setting the consumer_secret" do
@@ -32,7 +32,7 @@ describe Warden::Config do
           @config.oauth(:service) do |service|
             service.consumer_key "ABC"
           end
-        end.should raise_error(Warden::OAuth::ConfigError, "You need to specify the consumer key and the consumer secret")
+        end.should raise_error(Warden::OAuth2::ConfigError, "You need to specify the consumer key and the consumer secret")
       end
 
       it "should create a new instance of strategy" do
@@ -41,7 +41,7 @@ describe Warden::Config do
           service.consumer_secret "123"
         end
         lambda do
-          Warden::OAuth::Strategy::Service
+          Warden::OAuth2::Strategy::Service
         end.should_not raise_error(NameError)
       end
 

@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
 
     #
     # Contains methods from Rails to avoid unnecessary dependencies

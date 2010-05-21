@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
   
     #
     # Holds all the information of the OAuth service.
@@ -33,7 +33,7 @@ module Warden
 
       def check_requirements
         if @consumer_key.nil? || @consumer_secret.nil?
-          raise Warden::OAuth::ConfigError.new("You need to specify the consumer key and the consumer secret")
+          raise Warden::OAuth2::ConfigError.new("You need to specify the consumer key and the consumer secret")
         end
       end
 

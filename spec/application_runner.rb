@@ -4,7 +4,7 @@ require 'rubygems'
 require 'warden_oauth'
 require File.dirname(__FILE__) + "/application_scenario"
 
-Warden::OAuth.access_token_user_finder(:example) do |access_token|
+Warden::OAuth2.access_token_user_finder(:example) do |access_token|
   nil
 end
 

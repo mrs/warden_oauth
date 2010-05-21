@@ -15,10 +15,10 @@ begin
     gem.authors = ["Roman Gonzalez"]
     gem.rubyforge_project = "warden_oauth"
     gem.add_dependency('warden', ">= 0.8.1")
-    gem.add_dependency('oauth')
+    gem.add_dependency('oauth2')
     gem.add_development_dependency("rack-test")
     gem.add_development_dependency("fakeweb")
-    gem.add_development_dependency("rspec")
+    gem.add_development_dependency("rspec", '~> 1.3.0')
     gem.add_development_dependency("yard")
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end

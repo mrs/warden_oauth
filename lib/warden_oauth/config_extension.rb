@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
 
     #
     # Holds all the extensions made to Warden::Config in order to create OAuth
@@ -23,7 +23,7 @@ module Warden
       #   end
       #
       def oauth(service, &block)
-        config = Warden::OAuth::Config.new
+        config = Warden::OAuth2::Config.new
         if block_given?
           if block.arity == 1 
             yield config 
@@ -33,7 +33,7 @@ module Warden
         end
         config.check_requirements
         config.provider_name = service
-        Warden::OAuth::Strategy.build(service, config)
+        Warden::OAuth2::Strategy.build(service, config)
       end
     
     end
@@ -41,5 +41,5 @@ module Warden
   end
 end
 
-Warden::Config.send(:include, Warden::OAuth::ConfigExtension)
+Warden::Config.send(:include, Warden::OAuth2::ConfigExtension)
 

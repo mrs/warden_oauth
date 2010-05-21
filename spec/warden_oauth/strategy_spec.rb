@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + "/../spec_helper"
 require "rack/test"
 
-describe Warden::OAuth::Strategy do
+describe Warden::OAuth2::Strategy do
   
   def fixture_response(name)
     filename = File.dirname(__FILE__) + "/../fixtures/%s.txt" % name
@@ -9,29 +9,29 @@ describe Warden::OAuth::Strategy do
 
   describe '.build' do
     before(:each) do
-      @config = Warden::OAuth::Config.new
+      @config = Warden::OAuth2::Config.new
       @config.consumer_key "ABC"
       @config.consumer_secret "123"
       @config.options :site => 'http://service.com'
-      Warden::OAuth::Strategy.send(:remove_const, "Service") if Warden::OAuth::Strategy.const_defined?("Service")
+      Warden::OAuth2::Strategy.send(:remove_const, "Service") if Warden::OAuth::Strategy.const_defined?("Service")
       Warden::Strategies.clear!
-      Warden::OAuth::Strategy.build(:service, @config)
+      Warden::OAuth2::Strategy.build(:service, @config)
     end
 
     it "should create a new instance that extends from Warden::OAuth::Strategy" do
-      Warden::OAuth::Strategy.const_defined?("Service").should be_true
-      (Warden::OAuth::Strategy::Service < Warden::OAuth::Strategy).should be_true
+      Warden::OAuth2::Strategy.const_defined?("Service").should be_true
+      (Warden::OAuth2::Strategy::Service < Warden::OAuth::Strategy).should be_true
     end
 
     it "should register the oauth service key on the Warden strategies with `_oauth` appended" do
       Warden::Strategies[:service_oauth].should_not be_nil
-      Warden::OAuth::Strategy::Service.should_not be_nil
+      Warden::OAuth2::Strategy::Service.should_not be_nil
       Warden::Strategies[:service_oauth].should == Warden::OAuth::Strategy::Service
     end
 
     it "should assign the oauth_service config as a constant" do
-      Warden::OAuth::Strategy::Service::CONFIG.should_not be_nil
-      Warden::OAuth::Strategy::Service::CONFIG.should == @config 
+      Warden::OAuth2::Strategy::Service::CONFIG.should_not be_nil
+      Warden::OAuth2::Strategy::Service::CONFIG.should == @config 
     end
 
   end
@@ -78,7 +78,7 @@ describe Warden::OAuth::Strategy do
 
       before(:each) do
         Warden::Strategies.clear!
-        Warden::OAuth::Strategy.send(:remove_const, "Example") if Warden::OAuth::Strategy.const_defined?("Example")
+        Warden::OAuth2::Strategy.send(:remove_const, "Example") if Warden::OAuth::Strategy.const_defined?("Example")
       end
 
       describe "and the access_token_user_finder hasn't been declared" do
@@ -103,7 +103,7 @@ describe Warden::OAuth::Strategy do
       describe "and the access_token_user_finder has been declared" do
 
         before(:each) do
-          Warden::OAuth.access_token_user_finder(:example) do |access_token|
+          Warden::OAuth2.access_token_user_finder(:example) do |access_token|
             Object.new if access_token.token == 'ABC' && access_token.secret == '123' 
           end
           FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/request_token', 
@@ -112,7 +112,7 @@ describe Warden::OAuth::Strategy do
         end
 
         after(:each) do
-          Warden::OAuth.clear_access_token_user_finders
+          Warden::OAuth2.clear_access_token_user_finders
         end
 
         describe "and the user is not found" do

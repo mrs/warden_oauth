@@ -1,5 +1,5 @@
 module Warden
-  module OAuth
+  module OAuth2
 
     class ConfigError < ArgumentError; end
     class ServiceAlreadyRegistered < StandardError; end
