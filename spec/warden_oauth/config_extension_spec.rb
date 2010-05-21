@@ -19,26 +19,26 @@ describe Warden::Config do
 
     describe "when initialize" do
 
-      it "should require setting the consumer_key" do
+      it "should require setting the app_id" do
         lambda do
           @config.oauth(:service) do |service|
-            service.consumer_secret "ABC"
+            service.app_secret "ABC"
           end
-        end.should raise_error(Warden::OAuth2::ConfigError,  "You need to specify the consumer key and the consumer secret")
+        end.should raise_error(Warden::OAuth2::ConfigError,  "You need to specify the app id and the app secret")
       end
 
       it "should require setting the consumer_secret" do
         lambda do 
           @config.oauth(:service) do |service|
-            service.consumer_key "ABC"
+            service.app_id "ABC"
           end
-        end.should raise_error(Warden::OAuth2::ConfigError, "You need to specify the consumer key and the consumer secret")
+        end.should raise_error(Warden::OAuth2::ConfigError, "You need to specify the app id and the app secret")
       end
 
       it "should create a new instance of strategy" do
         @config.oauth(:service) do |service|
-          service.consumer_key "ABC"
-          service.consumer_secret "123"
+          service.app_id "ABC"
+          service.app_secret "123"
         end
         lambda do
           Warden::OAuth2::Strategy::Service

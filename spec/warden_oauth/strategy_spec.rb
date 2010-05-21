@@ -1,8 +1,7 @@
 require File.dirname(__FILE__) + "/../spec_helper"
 require "rack/test"
 
-describe Warden::OAuth2::Strategy do
-  
+describe Warden::OAuth2::Strategy do  
   def fixture_response(name)
     filename = File.dirname(__FILE__) + "/../fixtures/%s.txt" % name
   end
@@ -10,23 +9,23 @@ describe Warden::OAuth2::Strategy do
   describe '.build' do
     before(:each) do
       @config = Warden::OAuth2::Config.new
-      @config.consumer_key "ABC"
-      @config.consumer_secret "123"
+      @config.app_id "ABC"
+      @config.app_secret "123"
       @config.options :site => 'http://service.com'
-      Warden::OAuth2::Strategy.send(:remove_const, "Service") if Warden::OAuth::Strategy.const_defined?("Service")
+      Warden::OAuth2::Strategy.send(:remove_const, "Service") if Warden::OAuth2::Strategy.const_defined?("Service")
       Warden::Strategies.clear!
       Warden::OAuth2::Strategy.build(:service, @config)
     end
 
-    it "should create a new instance that extends from Warden::OAuth::Strategy" do
+    it "should create a new instance that extends from Warden::OAuth2::Strategy" do
       Warden::OAuth2::Strategy.const_defined?("Service").should be_true
-      (Warden::OAuth2::Strategy::Service < Warden::OAuth::Strategy).should be_true
+      (Warden::OAuth2::Strategy::Service < Warden::OAuth2::Strategy).should be_true
     end
 
     it "should register the oauth service key on the Warden strategies with `_oauth` appended" do
       Warden::Strategies[:service_oauth].should_not be_nil
       Warden::OAuth2::Strategy::Service.should_not be_nil
-      Warden::Strategies[:service_oauth].should == Warden::OAuth::Strategy::Service
+      Warden::Strategies[:service_oauth].should == Warden::OAuth2::Strategy::Service
     end
 
     it "should assign the oauth_service config as a constant" do
@@ -78,7 +77,7 @@ describe Warden::OAuth2::Strategy do
 
       before(:each) do
         Warden::Strategies.clear!
-        Warden::OAuth2::Strategy.send(:remove_const, "Example") if Warden::OAuth::Strategy.const_defined?("Example")
+        Warden::OAuth2::Strategy.send(:remove_const, "Example") if Warden::OAuth2::Strategy.const_defined?("Example")
       end
 
       describe "and the access_token_user_finder hasn't been declared" do

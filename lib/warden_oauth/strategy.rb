@@ -43,16 +43,16 @@ module Warden
       def authenticate!
         if params.include?('warden_oauth_provider')
           store_request_token_on_session
-          redirect!(request_token.authorize_url)
+          redirect!(client.authorize_url)
           throw(:warden)
         elsif params.include?('oauth_token') and session[:request_class] == self.class.to_s
-          load_request_token_from_session
+          load_access_token_from_session
           if missing_stored_token?
             fail!("There is no OAuth authentication in progress")
           elsif !stored_token_match_received_token?
             fail!("Received OAuth token didn't match stored OAuth token")
           else
-            user = find_user_by_access_token(access_token)
+            user = find_user_by_access_token(access_token.token)
             if user.nil?
               fail!("User with access token not found")
               throw_error_with_oauth_info
@@ -73,17 +73,16 @@ module Warden
       ### OAuth Logic ###
       ###################
 
-      def consumer
-        @consumer ||= ::OAuth2::Consumer.new(config.consumer_key, config.consumer_secret, config.options)
-      end
-
-      def request_token
-        host_with_port = Warden::OAuth2::Utils.host_with_port(request)
-        @request_token ||= consumer.get_request_token(:oauth_callback => host_with_port)
+      def client
+        @client ||= ::OAuth2::Client.new(config.app_id, config.app_secret, config.options)
       end
 
       def access_token
-        @access_token ||= request_token.get_access_token(:oauth_verifier => params['oauth_verifier'])
+        @access_token ||= ::OAuth2::AccessToken.new(client, session_oauth_token)
+      end
+      
+      def session_oauth_token
+        session[:oauth_token]
       end
 
       protected
@@ -104,33 +103,31 @@ ERROR_MESSAGE
       def throw_error_with_oauth_info
         throw(:warden, :oauth => { 
           self.config.provider_name => {
-            :provider => config.provider_name,
+            :provider     => config.provider_name,
             :access_token => access_token,
-            :consumer_key => config.consumer_key,
-            :consumer_secret => config.consumer_secret
+            :app_id       => config.app_id,
+            :app_secret   => config.app_secret
           }
         })
       end
 
       def store_request_token_on_session
-        session[:request_class] = self.class.to_s
-        session[:request_token]  = request_token.token
-        session[:request_secret] = request_token.secret
+        session[:request_class]  = self.class.to_s
+        session[:request_token]  = access_token.token
       end
 
-      def load_request_token_from_session
+      def load_access_token_from_session
         session.delete(:request_class)
-        token  = session.delete(:request_token)
-        secret = session.delete(:request_secret)
-        @request_token = ::OAuth::RequestToken.new(consumer, token, secret)
+        token  = session.delete(:oauth_token)
+        @access_token = ::OAuth2::AccessToken.new(client, token)
       end
 
       def missing_stored_token? 
-        !request_token
+        !session_oauth_token
       end
 
       def stored_token_match_received_token?
-        request_token.token == params['oauth_token']
+        session_oauth_token == params['oauth_token']
       end
 
       def service_param_name

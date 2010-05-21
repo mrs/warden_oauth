@@ -7,21 +7,21 @@ module Warden
     class Config
       attr_accessor :provider_name
       
-      def consumer_key(key = nil)
-        unless key.nil?
-          @consumer_key = key
+      def app_id(app_id = nil)
+        unless app_id.nil?
+          @app_id = app_id
         end
-        @consumer_key
+        @app_id
       end
-      alias_method :consumer_key=, :consumer_key
+      alias_method :app_id=, :app_id
 
-      def consumer_secret(secret = nil)
+      def app_secret(secret = nil)
         unless secret.nil?
-          @consumer_secret = secret
+          @app_secret = secret
         end
-        @consumer_secret
+        @app_secret
       end
-      alias_method :consumer_secret=, :consumer_secret
+      alias_method :app_secret=, :app_secret
 
       def options(options = nil) 
         unless options.nil?
@@ -32,8 +32,8 @@ module Warden
       alias_method :options=, :options
 
       def check_requirements
-        if @consumer_key.nil? || @consumer_secret.nil?
-          raise Warden::OAuth2::ConfigError.new("You need to specify the consumer key and the consumer secret")
+        if @app_id.nil? || @app_secret.nil?
+          raise Warden::OAuth2::ConfigError.new("You need to specify the app id and the app secret")
         end
       end
 

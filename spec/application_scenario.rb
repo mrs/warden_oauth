@@ -24,8 +24,8 @@ $app = Rack::Builder.new do
   use Rack::Session::Cookie
   use Warden::Manager do |manager|
     manager.oauth(:example) do |example|
-      example.consumer_key "aCOTnTeKniyifcwwF3Mo"
-      example.consumer_secret  "dEu91qxWfO0Z4Be1tHGuZ63FzHoUm9mk4Z8rzKa8"
+      example.app_id "aCOTnTeKniyifcwwF3Mo"
+      example.app_secret  "dEu91qxWfO0Z4Be1tHGuZ63FzHoUm9mk4Z8rzKa8"
       example.options :site => 'http://localhost:3000'
     end
     manager.default_strategies :example_oauth
