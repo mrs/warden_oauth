@@ -9,16 +9,13 @@ require "warden_oauth"
 
 
 class ClientApp
-
   def self.call(env)
     env['warden'].authenticate!
     [200, {"Content-Type" => 'text/plain'}, "Welcome"]
   end
-
 end
 
 class ErrorApp
-  
   def self.call(env)
     if env['warden.options'][:oauth].nil?
       [401, {'Content-Type' => 'text/plain'}, "You are not authenticated"]
@@ -27,7 +24,6 @@ class ErrorApp
       [401, {'Content-Type' => 'text/plain'}, "No user with the given access token"]
     end
   end
-
 end
 
 class User
@@ -48,9 +44,9 @@ app = Rack::Builder.new do
   use Rack::Session::Cookie
   use Warden::Manager do |config|
     config.oauth(:twitter) do |twitter|
-      # If you want this example to work, you need to specify both consumer_key and consumer_secret
-      twitter.consumer_key ""
-      twitter.consumer_secret ""
+      # If you want this example to work, you need to specify both app_id and app_secret
+      twitter.app_id ""
+      twitter.app_secret ""
       twitter.options :site => 'http://twitter.com'
     end
     config.default_strategies :twitter_oauth
