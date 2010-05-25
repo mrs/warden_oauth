@@ -8,7 +8,6 @@ class ClientApp
 end
 
 class ErrorApp
-  
   def self.call(env)
     if env['warden.options'][:oauth].nil?
       [401, {'Content-Type' => 'text/plain'}, "You are not authenticated"]
@@ -17,7 +16,6 @@ class ErrorApp
       [401, {'Content-Type' => 'text/plain'}, "No user with the given access token"]
     end
   end
-
 end
 
 $app = Rack::Builder.new do

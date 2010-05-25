@@ -57,13 +57,13 @@ describe Warden::OAuth2::Strategy do
     describe "with a warden_oauth_provider parameter" do
 
       before(:each) do
-        FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/request_token', 
-                             :body => fixture_response("unauthorized_request_token"))
         @response = @request.get("/", :params => { 'warden_oauth_provider' => 'example' })
       end 
 
       it "should redirect to the authorize url" do
-        @response.headers['Location'].should =~ %r"http://localhost:3000/oauth/authorize"
+        # It seems warden has changed behaviour and redirects to a path instead of URL
+        # matcher was originally "http://localhost:3000/oauth/authorize"
+        @response.headers['Location'].should =~ %r"/oauth/authorize"
       end
 
     end
@@ -92,7 +92,7 @@ describe Warden::OAuth2::Strategy do
           FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/access_token', 
                                :body => 'oauth_token=ABC&oauth_token_secret=123')
           lambda do
-            get "/", 'oauth_token' => "SylltB94pocC6hex8kr9",
+            @response = get "/", 'oauth_token' => "SylltB94pocC6hex8kr9",
                      'oauth_verifier' => "omPxEkKnnx9ygnu7dd6f"
           end.should raise_error(RuntimeError, /strategy/)
         end
@@ -103,10 +103,10 @@ describe Warden::OAuth2::Strategy do
 
         before(:each) do
           Warden::OAuth2.access_token_user_finder(:example) do |access_token|
-            Object.new if access_token.token == 'ABC' && access_token.secret == '123' 
+            Object.new if access_token.token == 'SylltB94pocC6hex8kr9'
           end
-          FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/request_token', 
-                               :body => fixture_response("unauthorized_request_token"))
+          FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/authorize',
+                               :head => 200)
           get "/", 'warden_oauth_provider' => 'example'
         end
 
@@ -117,10 +117,9 @@ describe Warden::OAuth2::Strategy do
         describe "and the user is not found" do
 
           before(:each) do
-            FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/access_token', 
-                                 :body => 'oauth_token=ABD&oauth_token_secret=122')
-            get "/", 'oauth_token' => "SylltB94pocC6hex8kr9",
-                   'oauth_verifier' => "omPxEkKnnx9ygnu7dd6f"
+            get "/",
+                'oauth_token' => "WrongToken",
+                'oauth_verifier' => "omPxEkKnnx9ygnu7dd6f"
           end
 
           it "should invoke the fail app" do
@@ -132,10 +131,12 @@ describe Warden::OAuth2::Strategy do
         describe "and the user is found" do
 
           before(:each) do
-            FakeWeb.register_uri(:post, 'http://localhost:3000/oauth/access_token', 
-                                 :body => 'oauth_token=ABC&oauth_token_secret=123')
-            get "/", 'oauth_token' => "SylltB94pocC6hex8kr9",
-                   'oauth_verifier' => "omPxEkKnnx9ygnu7dd6f"
+            FakeWeb.register_uri(:get, 'http://localhost:3000/oauth/authorize?access_token=SylltB94pocC6hex8kr9',
+                                 :status => ['200', 'Welcome'],
+                                 :body => 'Welcome')
+            get "/",
+                'oauth_token' => "SylltB94pocC6hex8kr9",
+                'oauth_verifier' => "omPxEkKnnx9ygnu7dd6f"
           end
 
           it "should go to the desired app" do

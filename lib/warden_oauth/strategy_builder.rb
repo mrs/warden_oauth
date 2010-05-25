@@ -7,8 +7,7 @@ module Warden
     #
     module StrategyBuilder
       extend self
-
-
+      
       #
       # Defines the user finder from the access_token for the strategy, receives a block
       # that will be invoked each time you want to find an user via an access_token in your
@@ -80,10 +79,15 @@ module Warden
       # (consumer_key, consumer_secret and options) of the oauth service.
       #
       # @param [Class] strategy class that will hold the configuration info
-      # @param [Warden::OAuth::Config] configuration info of the oauth service
+      # @param [Warden::OAuth2::Config] configuration info of the oauth service
       #
       def set_oauth_service_info(strategy_class, config)
-        strategy_class.const_set("CONFIG", config) unless strategy_class.const_defined?("CONFIG")
+        #FIXME: Nasty hack: nested hash is lost between calls, maybe linked to RSpec
+        if strategy_class.const_defined?("CONFIG")
+          strategy_class.const_get("CONFIG").options = config.options
+        else
+          strategy_class.const_set("CONFIG", config)
+        end
       end
 
       protected :create_oauth_strategy_class,
