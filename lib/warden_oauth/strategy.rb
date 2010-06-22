@@ -1,6 +1,5 @@
 module Warden
   module OAuth2
-
     #
     # Holds all the main logic of the OAuth authentication, all the generated
     # OAuth classes will extend from this class
@@ -13,18 +12,15 @@ module Warden
       ######################
 
 
-      def self.access_token_user_finders
-        (@_user_token_finders ||= {})
+      def self.user_finders
+        (@_user_finders ||= {})
       end
 
       #
-      # An OAuth strategy will be valid to execute if:
-      # * A 'warden_oauth_provider' parameter is given, with the name of the OAuth service
-      # * A 'oauth_token' is being receive on the request (response from an OAuth provider)
+      #
       #
       def valid?
-        (params.include?('warden_oauth_provider') && params['warden_oauth_provider'] == config.provider_name.to_s) ||
-                params.include?('oauth_token')
+        true
       end
 
       #
@@ -40,18 +36,23 @@ module Warden
       # user in the FailureApp with the given access_token
       #
       def authenticate!
-        if params.include?('warden_oauth_provider')
-          store_request_class_on_session
-          redirect!(client.authorize_url)
-          throw(:warden)
-        elsif params.include?('oauth_token') and session[:request_class] == self.class.to_s
-          store_token_on_session
-          user = find_user_by_access_token(access_token)
-          if user.nil?
+        if session_oauth_token
+          begin
+            user_id = user_id_from_token
+          rescue ::OAuth2::AccessDenied => e
+            puts "User with access token #{session_oauth_token} not found"
+            logger.debug "User with access token #{session_oauth_token} not found"
+            clean_session
             fail!("User with access token not found")
             throw_error_with_oauth_info
-          elsif !token_validated?
-            fail!("OAuth token invalid")
+          end
+          
+          user = find_user(user_id)
+          if user.nil?
+            puts "User with access token #{session_oauth_token} not found with id #{user_id}"
+            logger.debug "User with access token #{session_oauth_token} not found with id #{user_id}"
+            clean_session
+            fail!("User with id not found")
             throw_error_with_oauth_info
           else
             success!(user)
@@ -67,32 +68,56 @@ module Warden
       ###################
       ### OAuth Logic ###
       ###################
+      def self.validate_token!(access_token, refresh_token)
+        token = token_instance(access_token)
+        begin
+          token.get('/me')
+          true
+        rescue ::OAuth2::AccessDenied => e
+          fail!("Token not valid anymore")
+          throw_error_with_oauth_info
+        end
+      end
 
       def client
-        @client ||= ::OAuth2::Client.new(config.app_id, config.app_secret, config.options)
+        @client ||= ::OAuth2::Client.new(config.client_id, config.client_secret, config.options)
       end
 
       def access_token
         @access_token ||= ::OAuth2::AccessToken.new(client, session_oauth_token)
       end
 
+      def self.token_instance(oauth_token)
+        client = ::OAuth2::Client.new(config.client_id, config.client_secret, config.options)
+        ::OAuth2::AccessToken.new(client, oauth_token)
+      end
+
       def session_oauth_token
         session[:oauth_token]
       end
 
+      def user_id_from_token
+        json = access_token.get("/me")
+        JSON.parse(json)["id"]
+      end
+
+      def clean_session
+        session[:oauth_token] = nil
+      end
+
       protected
 
-      def find_user_by_access_token(access_token)
-        raise RuntimeError.new(<<-ERROR_MESSAGE) unless self.respond_to?(:_find_user_by_access_token)
-        
-You need to define a finder by access_token for this strategy.
-Write on the warden initializer the following code:
-Warden::OAuth.access_token_user_finder(:   #{config.provider_name}   ) do |access_token|
-  # Logic to get your user from an access_token
-end
+      def find_user(user_id)
+        raise RuntimeError.new(<<-ERROR_MESSAGE) unless self.respond_to?(:_find_user)
+
+      You need to define a finder by access_token for this strategy.
+      Write on the warden initializer the following code:
+      Warden::OAuth2.user_finder(:   #{config.provider_name}   ) do |user_identifier|
+        # Logic to get your user from an identifier
+      end
 
         ERROR_MESSAGE
-        self._find_user_by_access_token(access_token)
+        self._find_user(user_id)
       end
 
       def throw_error_with_oauth_info
@@ -100,8 +125,8 @@ end
                 self.config.provider_name => {
                         :provider     => config.provider_name,
                         :access_token => access_token,
-                        :app_id       => config.app_id,
-                        :app_secret   => config.app_secret
+                        :client_id       => config.client_id,
+                        :client_secret   => config.client_secret
                 }
         })
       end
@@ -115,15 +140,6 @@ end
         session[:oauth_token]  = params['oauth_token']
       end
 
-      def token_validated?
-        begin
-          access_token.get('/oauth/authorize')
-          true
-        rescue OAuth2::AccessDenied => e
-          false
-        end
-      end
-
       def missing_stored_token?
         !session_oauth_token
       end
@@ -134,6 +150,10 @@ end
 
       def config
         self.class::CONFIG
+      end
+
+      def self.config
+        const_get("CONFIG")
       end
 
     end
