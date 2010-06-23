@@ -46,7 +46,7 @@ module Warden
             fail!("User with access token not found")
             throw_error_with_oauth_info
           end
-          
+
           user = find_user(user_id)
           if user.nil?
             puts "User with access token #{session_oauth_token} not found with id #{user_id}"
@@ -74,8 +74,14 @@ module Warden
           token.get('/me')
           true
         rescue ::OAuth2::AccessDenied => e
-          fail!("Token not valid anymore")
-          throw_error_with_oauth_info
+          begin
+            client.web_server.refresh_access_token(refresh_token)
+          rescue ::OAuth2::AccessDenied => e
+            throw :warden
+            throw_error_with_oauth_info
+          end
+          session[:oauth_token] = access_token.token
+          session[:refresh_token] = access_token.refresh_token
         end
       end
 
@@ -88,8 +94,11 @@ module Warden
       end
 
       def self.token_instance(oauth_token)
-        client = ::OAuth2::Client.new(config.client_id, config.client_secret, config.options)
         ::OAuth2::AccessToken.new(client, oauth_token)
+      end
+
+      def self.client
+        @client ||= ::OAuth2::Client.new(config.client_id, config.client_secret, config.options)
       end
 
       def session_oauth_token
@@ -112,7 +121,7 @@ module Warden
 
       You need to define a finder by access_token for this strategy.
       Write on the warden initializer the following code:
-      Warden::OAuth2.user_finder(:   #{config.provider_name}   ) do |user_identifier|
+      Warden::OAuth2.user_finder(:    #{config.provider_name}    ) do |user_identifier|
         # Logic to get your user from an identifier
       end
 
