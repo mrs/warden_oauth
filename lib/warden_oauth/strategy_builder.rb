@@ -82,12 +82,14 @@ module Warden
       # @param [Warden::OAuth2::Config] configuration info of the oauth service
       #
       def set_oauth_service_info(strategy_class, config)
-        #FIXME: Nasty hack: nested hash is lost between calls, maybe linked to RSpec
-        if strategy_class.const_defined?("CONFIG")
-          strategy_class.const_get("CONFIG").options = config.options
-        else
+        unless strategy_class.const_defined?("CONFIG")
           strategy_class.const_set("CONFIG", config)
+          strategy_class.const_set("OPTIONS", config.options)
         end
+#        puts 'strategy_class.const_get("CONFIG").options'
+#        puts strategy_class.const_get("CONFIG").options.inspect
+#        puts 'strategy_class.const_get("CONFIG").options'
+#        strategy_class.const_get("CONFIG").options = config.options
       end
 
       protected :create_oauth_strategy_class,

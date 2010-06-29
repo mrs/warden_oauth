@@ -11,7 +11,6 @@ module Warden
       ### Strategy Logic ###
       ######################
 
-
       def self.user_finders
         (@_user_finders ||= {})
       end
@@ -88,7 +87,7 @@ module Warden
       end
 
       def client
-        @client ||= ::OAuth2::Client.new(config.client_id, config.client_secret, config.options)
+        @client ||= ::OAuth2::Client.new(config.client_id, config.client_secret, options)
       end
 
       def access_token
@@ -100,7 +99,7 @@ module Warden
       end
 
       def self.client
-        @client ||= ::OAuth2::Client.new(config.client_id, config.client_secret, config.options)
+        ::OAuth2::Client.new(config.client_id, config.client_secret, options)
       end
 
       def session_oauth_token
@@ -164,11 +163,21 @@ module Warden
       end
 
       def config
-        self.class::CONFIG
+        self.class.config
       end
 
       def self.config
         const_get("CONFIG")
+      end
+
+      def options
+        self.class.options
+      end
+
+      def self.options
+        # the client deletes stuff from the hash.
+        # the clone call preserves all info in the original options
+        const_get("OPTIONS").clone
       end
 
     end
