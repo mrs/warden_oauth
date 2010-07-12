@@ -80,8 +80,6 @@ module Warden
               throw :warden
               throw_error_with_oauth_info
             end
-            session[:oauth_token] = access_token.token
-            session[:refresh_token] = access_token.refresh_token
           end
         end
       end
