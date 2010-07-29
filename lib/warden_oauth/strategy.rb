@@ -67,15 +67,19 @@ module Warden
       ###################
       ### OAuth Logic ###
       ###################
-      def self.validate_token!(access_token, refresh_token, params)
+      def self.validate_token!(raw_session, params)
         unless params['code']
+	  access_token = raw_session[:oauth_token]
+          
           token = token_instance(access_token)
           begin
             token.get('/me')
             true
           rescue ::OAuth2::AccessDenied => e
             begin
-              client.web_server.refresh_access_token(refresh_token)
+              refresh_token = raw_session[:refresh_token]
+              token = client.web_server.refresh_access_token(refresh_token)
+              raw_session[:oauth_token] = token.token
             rescue ::OAuth2::AccessDenied => e
               throw :warden
               throw_error_with_oauth_info
